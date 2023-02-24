@@ -1,0 +1,19 @@
+
+OpenCores (partie processeurs): https://opencores.org/projects?expanded=Processor
+- uRisc: https://github.com/ultraembedded/core_uriscv (verilog)
+- Featherweight: https://github.com/Featherweight-IP/fwrisc (systemverilog)
+- DarkRISC: https://github.com/darklife/darkriscv (verilog)
+- RV01: https://opencores.org/projects/rv01_riscv_core (vhdl)
+- RISCV-EC: https://github.com/guianmon99/rv32i (vhdl)
+- NEORV32: https://opencores.org/projects/neorv32, https://github.com/stnolting/neorv32 (vhdl)
+
+--> implementations souvent lourdes, sous plusieurs fichiers pour les processeurs les plus poussés
+--> versions peu développées pour certaines
+
+
+A FAIRE:
+
+ - Modèle de processeur simulable basé sur l'ancien, simple à faire fonctionner.
+ - Nouveau modèle de RAM 
+ - Prendre les pages d'explication RISC-V correspondantes 
+ - Adapter le sujet

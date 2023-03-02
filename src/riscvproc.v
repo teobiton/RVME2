@@ -41,7 +41,7 @@ reg[width-1:0]	  REGS[0:NREGS-1];	 // regfile declaration
 `define RD 		IR[11:7]		// destination register
 
 // immediates
-`define I_IMM 	IR[31:12]					// I-type immediate
+`define I_IMM 	IR[31:20]					// I-type immediate
 `define S_IMM 	IR[31:25] << 5 || IR[11:7]  // S-type immediate
 
 /*
@@ -52,9 +52,22 @@ reg[width-1:0]	  REGS[0:NREGS-1];	 // regfile declaration
 `define IMM_ARITHMETIC 7'b0010011
 `define LOAD 		   7'b0000011
 `define STORE 		   7'b0100011
+`define EBREAK		   7'b1110011
 
 /* Arithmetic instructions */
-`define ADD 	3'b000
+`define ADD 	{3'b000, 7'b0000000}
+`define SUB 	{3'b000, 7'b0100000}
+`define SRL 	{3'b001, 7'b0000000} 	// Shift Right
+`define SLL 	{3'b101, 7'b0000000}	// Shift Left
+
+/* Load instructions */
+`define LB		3'b000	// Load Byte
+
+/* Store instructions */
+`define SB		3'b000	// Store Byte
+
+/* Arithmetic immediates instructions */
+`define ADDI	3'b000  // Add Immediate
 
 //TODO: do we keep this ?
 /*

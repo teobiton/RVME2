@@ -19,7 +19,7 @@ parameter
 localparam int unsigned IR_SIZE = 32; // instructions are on 32 bits
 localparam int unsigned NREGS = 16;   // number or registers
 
-reg[width-1:0] MEM[0:memsize-1]; 	 // memory declaration
+reg[width-1:0] 	  MEM[0:memsize-1];  // memory declaration
 reg[IR_SIZE-1:0]  IR;                // instruction register declaration
 reg[sbits-1:0]    SR;                // status register
 reg[addrsize-1:0] PC;                // program counter
@@ -68,6 +68,7 @@ reg[width-1:0]	  REGS[0:NREGS-1];	 // regfile declaration
 
 /* Arithmetic immediates instructions */
 `define ADDI	3'b000  // Add Immediate
+`define ANDI	3'b111  // And Immediate
 
 //TODO: do we keep this ?
 /*
@@ -100,7 +101,8 @@ endtask
 initial begin
 	
   PC = 0;            // start program
- end
+
+end
 
 /*
 	Main cycle for one instruction
@@ -109,37 +111,34 @@ always begin         // execution time of one instruction
   #step
   IR = MEM[PC];      // instruction fetch
   PC = PC + 1;       // increment program counter
+  
   case(`OPCODE)		 // decode instruction
-  `NOP:;             				// nothing to do
-  `BRA: if (SR[`CCODE])     		// branch
-	PC = `BB;
-  `STR: if (`IM)                	// store
-	MEM[`BB] = `AA;         		// immediate
-	else
-	MEM[`BB] = MEM[`AA];    		// direct
-  `ADD: begin
-	MEM[`BB] = MEM[`AA] + MEM[`BB];
-	setcondcode(MEM[`BB]);
-	end
-  `MUL: begin
-	MEM[`BB] = MEM[`AA] * MEM[`BB];
-	setcondcode(MEM[`BB]);
-	end
-  `CPL: begin
-	  if (`IM)                 		  // complement store
-	  MEM[`BB] = ~`AA;         		  // immediate
-	  else
-	  MEM[`BB] = ~MEM[`AA];    		  // direct
-	  setcondcode(MEM[`BB]);
-	  end
-  `SHF: begin
-	  if (`SHL)                	      // shift 
-	  MEM[`BB] = MEM[`BB] << `SHD;    // left
-	  else
-	  MEM[`BB] = MEM[`BB] >> `SHD;    // right
-	  setcondcode(MEM[`BB]);
-	  end
-  `HLT: $finish ;                  	  // halt
+  `ARITHMETIC: begin
+	case({`F3, `F7})
+	`ADD:
+	`SUB:
+	`SRL:
+	`SLL:
+	default: $display("erreur: mauvaise valeur dans op-code");
+	endcase
+  end
+  `IMM_ARITHMETIC: begin
+	case(`F3)
+	`ADDI:
+	`ANDI:
+  	endcase
+  end
+  `LOAD: begin
+	case(`F3)
+	`LB:
+  	endcase
+  end
+  `STORE: begin
+	case(`F3)
+	`SB:
+  	endcase
+  end
+  `EBREAK: $finish ; // halt
   default: $display("erreur: mauvaise valeur dans op-code");
   endcase
 end

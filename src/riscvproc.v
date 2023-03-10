@@ -60,10 +60,10 @@ reg[width-1:0]	  REGS[0:NREGS-1];	 // regfile declaration
 `define SLL 	{3'b101, 7'b0000000}	// Shift Left
 
 /* Load instructions */
-`define LB		3'b000	// Load Byte
+`define LW		3'b010	// Load Word
 
 /* Store instructions */
-`define SB		3'b000	// Store Byte
+`define SW		3'b010	// Store Word
 
 /* Arithmetic immediates instructions */
 `define ADDI	3'b000  // Add Immediate

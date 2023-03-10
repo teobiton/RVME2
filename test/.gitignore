@@ -1,0 +1,5 @@
+# Ignore Cocotb results, keep it local
+*.vcd
+*.xml
+sim_build/
+__pycache__/

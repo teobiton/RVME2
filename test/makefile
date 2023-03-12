@@ -27,10 +27,5 @@ VERILOG_SOURCES = $(SRC_DIRECTORY)/$(VERILOG_FILE)
 
 EXTRA_ARGS += --trace --trace-structs
 
-clean:
-	rm *.vcd
-	rm *.xml
-	rm -r sim_build
-
 include $(shell cocotb-config --makefiles)/Makefile.sim
 

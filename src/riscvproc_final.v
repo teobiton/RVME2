@@ -62,8 +62,8 @@ module rvcore #(
   /* Arithmetic instructions */
   `define ADD 	{3'b000, 7'b0000000}
   `define SUB 	{3'b000, 7'b0100000}
-  `define SRL 	{3'b001, 7'b0000000} 	// Shift Right
-  `define SLL 	{3'b101, 7'b0000000}	// Shift Left
+  `define SLL 	{3'b001, 7'b0000000} 	// Shift Left
+  `define SRL 	{3'b101, 7'b0000000}	// Shift Right
 
   /* Load instructions */
   `define LW		3'b010	// Load Word
@@ -130,8 +130,8 @@ module rvcore #(
           case({`F3, `F7})
             `ADD: REGS[`RD] = REGS[`RS1] + REGS[`RS2];
             `SUB: REGS[`RD] = REGS[`RS1] - REGS[`RS2];
-            `SRL: REGS[`RD] = REGS[`RS1] >> REGS[`RS2];
-            `SLL: REGS[`RD] = REGS[`RS1] << REGS[`RS2];
+            `SRL: REGS[`RD] = REGS[`RS1] >> REGS[`RS2][4:0];
+            `SLL: REGS[`RD] = REGS[`RS1] << REGS[`RS2][4:0];
             default: $display("erreur: mauvaise instruction arithmétique");
           endcase
         end
@@ -158,5 +158,6 @@ module rvcore #(
         default: $display("erreur: mauvaise valeur dans op-code");
       endcase
     end
-end
+  end
+
 endmodule 

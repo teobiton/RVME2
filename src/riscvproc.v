@@ -67,7 +67,12 @@ module system;
 
   /* Arithmetic immediates instructions */
   `define ADDI	3'b000  // Add Immediate
-  `define ANDI	3'b111  // And Immediate
+  `define ANDI	3'b011  // And Immediate
+  `define ORI   3'b100  // Or Immediate
+  //TODO: Do we need these instructions ? Not described in the initial ME2 project. 
+  `define SLTI  3'b001  // Set less than Immediate
+  `define SLTU  3'b010  // Set less than Immediate (unsigned)
+  `define XORI  3'b101  // Xor Immediate
 
   //TODO: do we keep this ?
   /*
@@ -124,8 +129,26 @@ module system;
       end
       `IMM_ARITHMETIC: begin
         case(`F3)
-          `ADDI:;
-          `ANDI:;
+          `ADDI: REGS[`RD] = REGS[`RS1] + `I_IMM;
+          `ANDI: REGS[`RD] = REGS[`RS1] & `I_IMM;
+          `ORI:  REGS[`RD] = REGS[`RS1] | `I_IMM;
+          // // Optional instructions (more complex, maybe not necessary)
+          // if ( $signed(`RS1) < $signed(`I_IMM) )
+          //   `SLTI: REGS[`RD] = 1;
+          // else
+          //   `SLTI: REGS[`RD] = 0;
+
+          // if ( `RS1 < `I_IMM )
+          //   `SLTU: REGS[`RD] = 1;
+          // else
+          //   `SLTU: REGS[`RD] = 0;
+
+          // // Case Xor Immediate or Not operation
+          // if ( `I_IMM == -1 )
+          //   `XORI: REGS[`RD] = ~ REGS[`RS1];
+          // else
+          //   `XORI: REGS[`RD] = REGS[`RS1] ^ `I_IMM;
+
           default: $display("erreur: mauvaise instruction arithmétique immédiate");
         endcase
       end

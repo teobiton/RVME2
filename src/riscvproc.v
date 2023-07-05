@@ -1,5 +1,5 @@
  /*
- Author: Téo Biton, Mathis Briard
+ Authors: Téo Biton, Mathis Briard
  Date: 18.02.2023 (v0)
  Description: Simple single-cycle RISC-V processor (RV32I) for simulation,
               plus regfile
@@ -9,15 +9,15 @@ module system;
 
   // Parameters declaration
   parameter 
-    step = 10,              // execution time of one instruction
-    width = 32,             // data bus width
+    step     = 10,          // execution time of one instruction
+    width    = 32,          // data bus width
     addrsize = 12,          // address bus width
-    memsize = 1<<addrsize,  // memory size
-    sbits = 6;              // number of status bits
+    memsize  = 1<<addrsize, // memory size
+    sbits    = 6;           // number of status bits
 
   // Local parameters declaration
   localparam int unsigned IR_SIZE = 32; // instructions are on 32 bits
-  localparam int unsigned NREGS = 16;   // number or registers
+  localparam int unsigned NREGS   = 16; // number or registers
 
   reg[width-1:0]    MEM[0:memsize-1];  // memory declaration
   reg[IR_SIZE-1:0]  IR;                // instruction register declaration

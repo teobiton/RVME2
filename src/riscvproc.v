@@ -45,8 +45,8 @@ module system;
   `define S_IMM   IR[31:25] << 5 || IR[11:7]   // S-type immediate
 
   // addresses (for Load and Store instructions)
-  `define LOAD_OFFSET    IR[31:20]
-  `define STORE_OFFSET   IR[31:25] << 5 || IR[11:7]
+  `define LOAD_OFFSET    IR[31:20] << 12
+  `define STORE_OFFSET   (IR[31:25] << 5 || IR[11:7]) << 12
 
   /*
     Instruction Declarations
@@ -149,7 +149,7 @@ module system;
       `STORE: begin
         case(`F3)
           `SW: begin
-            ADDR      = `LOAD_OFFSET + REGS[`RS1];
+            ADDR      = `STORE_OFFSET + REGS[`RS1];
             MEM[ADDR] = REGS[`RS2];
           end
           default: $display("erreur: mauvaise instruction store");

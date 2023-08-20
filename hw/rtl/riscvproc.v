@@ -1,8 +1,8 @@
 /* 
  Author: Téo Biton, Mathis Briard
  Date: 18.02.2023 (v0)
- Description: Simple RISC-V processor (RV32I) for simulation,
-			        plus regfile
+ Description: Simple single-cycle RISC-V processor (RV32I) for simulation,
+              plus regfile
 */
 
 module rvcore #(
@@ -22,14 +22,14 @@ module rvcore #(
   );
 
   // Local parameters declaration
-  parameter IR_SIZE = 32; // instructions are on 32 bits
-  parameter NREGS = 32;   // number or registers
+  parameter IR_SIZE = 32;   // instructions are on 32 bits
+  parameter NREGS   = 32;   // number or registers
 
-  reg[width-1:0] 	  MEM[0:memsize-1];  // memory declaration
+  reg[width-1:0]    MEM[0:memsize-1];  // memory declaration
   reg[IR_SIZE-1:0]  IR;                // instruction register declaration
   reg[sbits-1:0]    SR;                // status register
   reg[addrsize-1:0] PC;                // program counter
-  reg[width-1:0]	  REGS[0:NREGS-1];	 // regfile declaration
+  reg[width-1:0]    REGS[0:NREGS-1];   // regfile declaration
 
   /*
     Instruction Fields
@@ -37,43 +37,47 @@ module rvcore #(
 
   // instruction identifiers
   `define OPCODE  IR[6:0]     // opcode
-  `define F3 		  IR[14:12]		// funct3
-  `define F7 		  IR[31:25]		// funct7
+  `define F3      IR[14:12]   // funct3
+  `define F7      IR[31:25]   // funct7
 
   // register fields
-  `define RS1 	IR[19:15]		// source register 1
-  `define RS2 	IR[24:20]		// source register 2
-  `define RD 		IR[11:7]		// destination register
+  `define RS1   IR[19:15]    // source register 1
+  `define RS2   IR[24:20]    // source register 2
+  `define RD    IR[11:7]     // destination register
 
   // immediates
-  `define I_IMM 	IR[31:20]					          // I-type immediate
-  `define S_IMM 	IR[31:25] << 5 || IR[11:7]  // S-type immediate
+  `define I_IMM   IR[31:20]                    // I-type immediate
+  `define S_IMM   IR[31:25] << 5 || IR[11:7]   // S-type immediate
+
+  // addresses (for Load and Store instructions)
+  `define LOAD_OFFSET    IR[31:20]
+  `define STORE_OFFSET   IR[31:25] << 5 || IR[11:7]
 
   /*
     Instruction Declarations
   */
 
-  `define ARITHMETIC 	      7'b0110011
+  `define ARITHMETIC        7'b0110011
   `define IMM_ARITHMETIC    7'b0010011
-  `define LOAD 		          7'b0000011
-  `define STORE 		        7'b0100011
-  `define EBREAK		        7'b1110011
+  `define LOAD              7'b0000011
+  `define STORE             7'b0100011
+  `define EBREAK            7'b1110011
 
   /* Arithmetic instructions */
-  `define ADD 	{3'b000, 7'b0000000}
-  `define SUB 	{3'b000, 7'b0100000}
-  `define SLL 	{3'b001, 7'b0000000} 	// Shift Left
-  `define SRL 	{3'b101, 7'b0000000}	// Shift Right
+  `define ADD   {3'b000, 7'b0000000}
+  `define SUB   {3'b000, 7'b0100000}
+  `define SLL   {3'b001, 7'b0000000}  // Shift Left
+  `define SRL   {3'b101, 7'b0000000}  // Shift Right
 
   /* Load instructions */
-  `define LW		3'b010	// Load Word
+  `define LW    3'b010  // Load Word
 
   /* Store instructions */
-  `define SW		3'b010	// Store Word
+  `define SW    3'b010  // Store Word
 
   /* Arithmetic immediates instructions */
-  `define ADDI	3'b000  // Add Immediate
-  `define ANDI	3'b111  // And Immediate
+  `define ADDI  3'b000  // Add Immediate
+  `define ANDI  3'b111  // And Immediate
 
   //TODO: do we keep this ?
   /*
@@ -125,7 +129,7 @@ module rvcore #(
       PC <= PC + 1;       // increment program counter
       IR = MEM[PC];       // instruction fetch
       
-      case(`OPCODE)		   // decode instruction
+      case(`OPCODE)       // decode instruction
         `ARITHMETIC: begin
           case({`F3, `F7})
             `ADD: REGS[`RD] = REGS[`RS1] + REGS[`RS2];

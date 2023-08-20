@@ -1,8 +1,11 @@
  /*
- Authors: Téo Biton, Mathis Briard
- Date: 18.02.2023 (v0)
+ Authors: Téo Biton
+ Date: 06.07.2023 (v0)
  Description: Simple single-cycle RISC-V processor (RV32I) for simulation,
               plus regfile
+ 
+ RISC-V Unprivileged Specifications Volume I: https://riscv.org/technical/specifications/
+ Chapters and pages from this Volume are referenced for help.
 */
 
 module system;
@@ -17,7 +20,7 @@ module system;
 
   // Local parameters declaration
   localparam int unsigned IR_SIZE = 32; // instructions are on 32 bits
-  localparam int unsigned NREGS   = 16; // number or registers
+  localparam int unsigned NREGS   = 16; // number of internal registers
 
   reg[width-1:0]    MEM[0:memsize-1];  // memory declaration
   reg[IR_SIZE-1:0]  IR;                // instruction register declaration
@@ -28,37 +31,43 @@ module system;
 
   /*
     Instruction Fields
+    Chapter 2.2 Base Instruction Formats
   */
 
-  // instruction identifiers
+  // instruction identifiers - Pages 15, 16
   `define OPCODE  IR[6:0]     // opcode
   `define F3      IR[14:12]   // funct3
   `define F7      IR[31:25]   // funct7
 
-  // register fields
+  // register fields - Pages 15, 16
   `define RS1   IR[19:15]    // source register 1
   `define RS2   IR[24:20]    // source register 2
   `define RD    IR[11:7]     // destination register
 
-  // immediates
-  `define I_IMM   IR[31:20]                    // I-type immediate
-  `define S_IMM   IR[31:25] << 5 || IR[11:7]   // S-type immediate
+  // immediates - Pages 15, 16
+  `define I_IMM   $signed(IR[31:20])                 // I-type immediate
+  `define S_IMM   $signed(IR[31:25] << 5 | IR[11:7]) // S-type immediate
 
-  // addresses (for Load and Store instructions)
-  `define LOAD_OFFSET    IR[31:20] << 12
-  `define STORE_OFFSET   (IR[31:25] << 5 || IR[11:7]) << 12
+  // addresses (for Load and Store instructions
+  // chapter 2.6 Load and Store Instructions
+  `define LOAD_OFFSET     IR[31:20] << 12
+  `define STORE_OFFSET   (IR[31:25] << 5 | IR[11:7]) << 12
 
   /*
     Instruction Declarations
+    Chapter 24 RV32/64G Instruction Set Listings
+    Page 130
   */
 
+  /* Opcodes */
   `define ARITHMETIC        7'b0110011
   `define IMM_ARITHMETIC    7'b0010011
   `define LOAD              7'b0000011
   `define STORE             7'b0100011
   `define EBREAK            7'b1110011
 
-  /* Arithmetic instructions */
+  /* Arithmetic instructions
+     Format:    {Funct3, Funct7    } */
   `define ADD   {3'b000, 7'b0000000}
   `define SUB   {3'b000, 7'b0100000}
   `define SLL   {3'b001, 7'b0000000}  // Shift Left
@@ -75,7 +84,7 @@ module system;
   `define ANDI  3'b011  // And Immediate
   `define ORI   3'b100  // Or Immediate
 
-  //TODO: do we keep this ?
+  // TODO: do we keep this ?
   /*
     Status Register
   */
@@ -89,15 +98,15 @@ module system;
 
   // set flags
   task setcondcode;
-  input [width:0] RES;
-  begin
-    SR[`ALWAYS]     = 1;
-    SR[`CARRY]      = RES[width];
-    SR[`EVEN]       = ~RES[0];
-    SR[`PARITY]     = ^RES;
-    SR[`ZERO]       = ~(|RES);
-    SR[`NEG]        = RES[width-1];
-  end
+    input [width:0] RES;
+    begin
+      SR[`ALWAYS]     = 1;
+      SR[`CARRY]      = RES[width];
+      SR[`EVEN]       = ~RES[0];
+      SR[`PARITY]     = ^RES;
+      SR[`ZERO]       = ~(|RES);
+      SR[`NEG]        = RES[width-1];
+    end
   endtask
 
   /*
@@ -112,15 +121,15 @@ module system;
   /*
     Main cycle for one instruction
   */
-  always @ (posedge clk) begin // execution time of one instruction
+  always begin // execution time of one instruction
     
     #step;
-    PC   <= PC + 1;       // increment program counter
-    IR   = MEM[PC];       // instruction fetch
-    ADDR = 0;             // address initial value
+    PC   <= PC + 1;      // increment program counter
+    IR   = MEM[PC];      // instruction fetch
+    ADDR = 0;            // address initial value
     
-    case(`OPCODE)       // decode instruction
-      `ARITHMETIC: begin
+    case(`OPCODE)        // decode instruction
+      `ARITHMETIC: begin // Integer Register-Register Operations - Page 19
         case({`F3, `F7})
           `ADD: REGS[`RD] = REGS[`RS1] + REGS[`RS2];
           `SUB: REGS[`RD] = REGS[`RS1] - REGS[`RS2];
@@ -129,7 +138,7 @@ module system;
           default: $display("erreur: mauvaise instruction arithmétique");
         endcase
       end
-      `IMM_ARITHMETIC: begin
+      `IMM_ARITHMETIC: begin // Integer Register-Immediate Instructions - Page 18
         case(`F3)
           `ADDI: REGS[`RD] = REGS[`RS1] + `I_IMM;
           `ANDI: REGS[`RD] = REGS[`RS1] & `I_IMM;
@@ -137,16 +146,16 @@ module system;
           default: $display("erreur: mauvaise instruction arithmétique immédiate");
         endcase
       end
-      `LOAD: begin
+      `LOAD: begin // Load and Store Instructions - Page 24
         case(`F3)
           `LW: begin
             ADDR      = `LOAD_OFFSET + REGS[`RS1];
-            REGS[`RD] = MEM[ADDR];;
+            REGS[`RD] = MEM[ADDR];
           end
           default: $display("erreur: mauvaise instruction load");
         endcase
       end
-      `STORE: begin
+      `STORE: begin // Load and Store Instructions - Page 24
         case(`F3)
           `SW: begin
             ADDR      = `STORE_OFFSET + REGS[`RS1];
@@ -155,7 +164,9 @@ module system;
           default: $display("erreur: mauvaise instruction store");
         endcase
       end
-      `EBREAK: $finish ; // halt
+      // Environment Call and Breakpoints - Page 27
+      // Slight change from the spec, Ebreak finishes simulation
+      `EBREAK: $finish;
       default: $display("erreur: mauvaise valeur dans op-code");
     endcase
   end
